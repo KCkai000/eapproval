@@ -6,6 +6,7 @@ import java.util.List;
 import com.example.demo.enums.Action;
 import com.example.demo.enums.Goto;
 import com.example.demo.enums.State;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,8 +32,12 @@ public class Flow {
 	private Integer id; // 流程ID
 	
 	@Enumerated(EnumType.STRING)
-	@Column(name = "state", length = 20)
+	@Column(name = "state")
 	private State state;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(name = "current")
+	private Goto currentgoTo;
 	
 	@Enumerated(EnumType.STRING)
 	@Column(name = "goto")
@@ -44,14 +49,12 @@ public class Flow {
 	
 	@ManyToOne
 	@JoinColumn(name = "role_id")
+	@JsonIgnore
 	private Role role;
 	
 	@OneToMany(mappedBy = "flow")
+	@JsonIgnore
 	private List<FlowLog> flowLogs; // 一個流程可以有多個流程紀錄
 	
-	public Flow() {
-		this.action = Action.START; // 預設動作為開始
-		this.goTo = Goto.USER; // 預設流程開始於使用者提交表單
-	}
 }
 

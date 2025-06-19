@@ -1,0 +1,191 @@
+列出磁碟區 Windows 的資料夾 PATH
+磁碟區序號為 6047-2219
+C:.
+│  .classpath
+│  .factorypath
+│  .gitattributes
+│  .gitignore
+│  .project
+│  HELP.md
+│  mvnw
+│  mvnw.cmd
+│  ouput.txt
+│  pom.xml
+│  project-structure.txt
+│  
+├─.mvn
+│  └─wrapper
+│          maven-wrapper.properties
+│          
+├─.settings
+│      org.eclipse.core.resources.prefs
+│      org.eclipse.jdt.apt.core.prefs
+│      org.eclipse.jdt.core.prefs
+│      org.eclipse.m2e.core.prefs
+│      org.springframework.ide.eclipse.prefs
+│      
+├─logs
+│      app.log
+│      
+├─src
+│  ├─main
+│  │  ├─java
+│  │  │  └─com
+│  │  │      └─example
+│  │  │          └─demo
+│  │  │              │  EapprovalApplication.java
+│  │  │              │  
+│  │  │              ├─config
+│  │  │              │      CorsConfig.java
+│  │  │              │      ModelMapperConfig.java
+│  │  │              │      SecurityConfig.java
+│  │  │              │      
+│  │  │              ├─controller
+│  │  │              │      LeaveController.java
+│  │  │              │      UserLoginController.java
+│  │  │              │      
+│  │  │              ├─enums
+│  │  │              │      Action.java
+│  │  │              │      Goto.java
+│  │  │              │      State.java
+│  │  │              │      Type.java
+│  │  │              │      
+│  │  │              ├─exception
+│  │  │              │      AuthException.java
+│  │  │              │      UserException.java
+│  │  │              │      
+│  │  │              ├─mapper
+│  │  │              │      UserMapper.java
+│  │  │              │      
+│  │  │              ├─model
+│  │  │              │  ├─dto
+│  │  │              │  │      FlowDto.java
+│  │  │              │  │      FlowLogDto.java
+│  │  │              │  │      LeaveFormDto.java
+│  │  │              │  │      LoginRequest.java
+│  │  │              │  │      RoleDto.java
+│  │  │              │  │      UserDto.java
+│  │  │              │  │      
+│  │  │              │  └─entity
+│  │  │              │          Flow.java
+│  │  │              │          FlowLog.java
+│  │  │              │          LeaveForm.java
+│  │  │              │          Role.java
+│  │  │              │          User.java
+│  │  │              │          
+│  │  │              ├─repository
+│  │  │              │      RoleRepository.java
+│  │  │              │      UserRepository.java
+│  │  │              │      
+│  │  │              ├─response
+│  │  │              │      ApiResponse.java
+│  │  │              │      
+│  │  │              ├─service
+│  │  │              │  │  AuthService.java
+│  │  │              │  │  UserService.java
+│  │  │              │  │  
+│  │  │              │  └─impl
+│  │  │              │          AuthServiceImpl.java
+│  │  │              │          UserServiceImpl.java
+│  │  │              │          
+│  │  │              └─util
+│  │  │                      JWTUtil.java
+│  │  │                      
+│  │  └─resources
+│  │      │  application.properties
+│  │      │  
+│  │      ├─static
+│  │      └─templates
+│  └─test
+│      └─java
+│          └─com
+│              └─example
+│                  └─demo
+│                          EapprovalApplicationTests.java
+│                          
+└─target
+    ├─classes
+    │  │  application.properties
+    │  │  
+    │  ├─com
+    │  │  └─example
+    │  │      └─demo
+    │  │          │  EapprovalApplication.class
+    │  │          │  
+    │  │          ├─config
+    │  │          │      CorsConfig$1.class
+    │  │          │      CorsConfig.class
+    │  │          │      ModelMapperConfig.class
+    │  │          │      SecurityConfig.class
+    │  │          │      
+    │  │          ├─controller
+    │  │          │      LeaveController$LeaveRequest.class
+    │  │          │      LeaveController.class
+    │  │          │      UserLoginController.class
+    │  │          │      
+    │  │          ├─enums
+    │  │          │      Action.class
+    │  │          │      Goto.class
+    │  │          │      State.class
+    │  │          │      Type.class
+    │  │          │      
+    │  │          ├─exception
+    │  │          │      AuthException.class
+    │  │          │      UserException.class
+    │  │          │      
+    │  │          ├─mapper
+    │  │          │      UserMapper.class
+    │  │          │      
+    │  │          ├─model
+    │  │          │  ├─dto
+    │  │          │  │      FlowDto.class
+    │  │          │  │      FlowLogDto.class
+    │  │          │  │      LeaveFormDto.class
+    │  │          │  │      LoginRequest.class
+    │  │          │  │      RoleDto.class
+    │  │          │  │      UserDto.class
+    │  │          │  │      
+    │  │          │  └─entity
+    │  │          │          Flow.class
+    │  │          │          FlowLog.class
+    │  │          │          LeaveForm.class
+    │  │          │          Role.class
+    │  │          │          User.class
+    │  │          │          
+    │  │          ├─repository
+    │  │          │      RoleRepository.class
+    │  │          │      UserRepository.class
+    │  │          │      
+    │  │          ├─response
+    │  │          │      ApiResponse.class
+    │  │          │      
+    │  │          ├─service
+    │  │          │  │  AuthService.class
+    │  │          │  │  UserService.class
+    │  │          │  │  
+    │  │          │  └─impl
+    │  │          │          AuthServiceImpl.class
+    │  │          │          UserServiceImpl.class
+    │  │          │          
+    │  │          └─util
+    │  │                  JWTUtil.class
+    │  │                  
+    │  └─META-INF
+    │      │  MANIFEST.MF
+    │      │  
+    │      └─maven
+    │          └─com.example
+    │              └─Eapproval
+    │                      pom.properties
+    │                      pom.xml
+    │                      
+    ├─generated-sources
+    │  └─annotations
+    ├─generated-test-sources
+    │  └─test-annotations
+    └─test-classes
+        └─com
+            └─example
+                └─demo
+                        EapprovalApplicationTests.class
+                        

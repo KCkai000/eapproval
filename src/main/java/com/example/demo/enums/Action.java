@@ -11,7 +11,9 @@ public enum Action {
 	REJECTED(4, "已拒絕"),
 	CANCELLED(5, "已取消"),
 	RETURNED(6, "已退回"),
-	END(7, "已完成");
+	END(-1, "已完成");
+	
+	
 	
 	
 	private final Integer code;

@@ -4,14 +4,11 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration  // Springboot啟動前會先執行此配置
+@Configuration
 public class ModelMapperConfig {
 	
-	/* Springboot 會自動建立此物件
-	 * 其他城市可以透過@Autowired 來取得該實體物件
-	 * */	
 	@Bean
-	ModelMapper modelMapper() {
-		return new ModelMapper();
-	}
+    public ModelMapper modelMapper() {
+        return new ModelMapper();
+    }
 }

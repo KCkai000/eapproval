@@ -17,6 +17,7 @@ public class CorsConfig {
                         .allowedOrigins("http://localhost:5173")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
+                        .exposedHeaders("Authorization") // ← 這行很關鍵
                         .allowCredentials(true); // 如果之後有 cookie 認證
             }
         };

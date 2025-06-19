@@ -3,8 +3,11 @@ package com.example.demo.model.entity;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -14,9 +17,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -27,11 +33,13 @@ public class LeaveForm {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
 	private Integer id; // 請假單ID
-	@OneToMany
-	@Column(name = "flow_state")
-	private Flow flowState; // 假別
+	@ManyToOne
+	@JoinColumn(name = "status", nullable = false)
+	@JsonIgnore
+	private Flow state ; // 假別
 	@ManyToOne
 	@JoinColumn(name = "flow_action")
+	@JsonIgnore
 	private Flow action; // 審核狀態
 	@Column(name = "start_date", nullable = false)
 	private LocalDate startDate;
@@ -39,6 +47,10 @@ public class LeaveForm {
 	private LocalDate endDate; // 結束日期
 	@Column(name = "reason", length= 200)
 	private String reason; // 請假原因
-	@OneToMany(mappedBy = "leaveForm")
+	@Column(name = "active", nullable = false) //作為表單是否存在在頁面 false =>軟刪除
+	private Boolean active = true; // 是否啟用，預設為true
+	@OneToMany(mappedBy = "leaveForm", fetch = FetchType.LAZY)	
+	@JsonIgnore
 	private List<FlowLog> flowLogs; // 一個請假單可以有多個流程紀錄
+	
 }

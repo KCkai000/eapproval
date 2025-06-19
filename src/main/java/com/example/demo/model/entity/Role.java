@@ -2,6 +2,8 @@ package com.example.demo.model.entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,9 +13,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -25,12 +30,14 @@ public class Role {
 	@Column(name = "id")
 	private Integer id;
 	
-	@Column(name ="title", nullable = false)
-	private String title;
+	@Column(name ="name", nullable = false)
+	private String name;
 	
 	@OneToMany(mappedBy = "role")
+	@JsonIgnore
 	private List<User> users;
 	
 	@OneToMany(mappedBy = "role")
+	@JsonIgnore
 	private List<Flow> flows;  // 一個角色可以有多個流程定義
 }

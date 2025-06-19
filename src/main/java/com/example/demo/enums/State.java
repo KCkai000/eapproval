@@ -29,5 +29,17 @@ public enum State {
 		}
 		return null;
 	}
+	
+	public static State fromDisplayName(String displayName) {
+		if(displayName == null || displayName.isBlank()) {
+			throw new IllegalArgumentException("State displayName 不可為null及空白");
+		}
+		for(State state : State.values()) {
+			if(state.getDisplayName().equals(displayName)) {
+				return state;
+			}
+		}
+		throw new IllegalArgumentException("找不到對應的 State displayName: " + displayName);
+	}
 
 }

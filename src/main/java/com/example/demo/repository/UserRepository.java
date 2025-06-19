@@ -17,9 +17,12 @@ public interface UserRepository  extends JpaRepository<User, Integer>{
 	List<User> findAllByRole(@Param("roleId") Integer roleId);	
 	List<User> findByActive(Boolean active);
 	List<User> findAll();
-	@Query("SELECT u From User u WHERE u.username %:keyword% OR u.account %:keyword% OR u.email %:keyword%")
+	@Query("SELECT u From User u WHERE u.username LIKE %:keyword% OR u.account LIKE %:keyword% OR u.email LIKE %:keyword%")
 	List<User> searchByUsernameOrAccountOrEmail(@Param("keyword") String keyword);
 	Optional<User> findById(Integer id);
-
+	List<User> findByUsername(String username);
+	@Query("SELECT u FROM User u Join FETCH u.role WHERE u.account = :account")
+	Optional<User> findByAccount(String account);
+	Optional<User> findByEmail(String email);
 	
 }
