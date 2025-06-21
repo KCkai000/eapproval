@@ -8,7 +8,7 @@ public enum State {
 	SICK_LEAVE(2, "病假"),    //SICK_LEANE =2
 	ANNUAL_LEAVE(3, "特休假"),  //ANNUAL_LEAVE = 3
 	FUNERAL_LEAVE(4, "喪假"),   //FUNERAL_LEAVE = 4
-	OFFCIAL_LEAVE(5, "公假"),  //OFFCIAL_LEAVE = 5
+	OFFICIAL_LEAVE(5, "公假"),  //OFFCIAL_LEAVE = 5
 	OTHER_LEAVE(6, "其他假別");  //OTHER_LEAVE = 6
 	
 	

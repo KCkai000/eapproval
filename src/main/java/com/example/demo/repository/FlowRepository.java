@@ -20,13 +20,15 @@ public interface FlowRepository extends JpaRepository<Flow, Integer>{
 	List<Flow> findByState(@Param("state") State state);
 	@Query("SELECT f FROM Flow f Where f.action = :action")
 	List<Flow> findByAction(@Param("action") Action action);
-	@Query("SELECT f FROM Flow f WHERE f.state = :state AND f.action = :action")
-	Optional<Flow> findByStateAndAction(@Param("state") State state, @Param("action") Action action); // ← 用這個最保險
+	@Query("SELECT f FROM Flow f WHERE f.state = :state AND f.action = :action And f.role.id = :roleId")
+	Optional<Flow> findByStateAndActionAndRoleId(@Param("state") State state, @Param("action") Action action, @Param("roleId") Integer roleId); // ← 用這個最保險
 	@Query("SELECT f FROM Flow f WHERE f.goTo = :goTo AND f.action = :action")
 	Optional<Flow> findByGotoAndAction(@Param("goTo") Goto goTo, @Param("action") Action action); 
 	@Query("SELECT f FROM Flow f WHERE f.state = :state AND f.action = :action AND f.currentgoTo = :currentgoTo")
 	Optional<Flow> findByStateAndActionAndCurrentgoTo(@Param("state") State state, @Param("action") Action action, @Param("currentgoTo") Goto currentgoTo);
 	// 用來找下一個流程的
 	@Query("SELECT f FROM Flow f WHERE f.currentgoTo = :currentGoTo And f.state = :state")
-	List<Flow> findByCurrenGoToAndState(@Param("currentGoTo") Goto currentGoTo, @Param("state") State state);
+	List<Flow> findByCurrentGoToAndState(@Param("currentGoTo") Goto currentGoTo, @Param("state") State state);
+	//@Query("SELECT f FROM Flow f WHERE f.current = :currentgoTo AND f.state = :state AND f.action = :action AND f.role.id = :roleId")
+	Optional<Flow> findByCurrentgoToAndStateAndActionAndRole_Id(@Param("current") Goto currentgoTo, @Param("state") State state, @Param("action") Action action, @Param("roleId") Integer roleId);
 }

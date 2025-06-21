@@ -24,12 +24,12 @@ public class FlowMapper {
 	
 	public Flow toEntity(FlowDto dto) {
 		Flow flow = new Flow();
-		flow.setState(Enum.valueOf(State.class, dto.getState().toString()));
-		flow.setCurrentgoTo(Enum.valueOf(Goto.class, dto.getCurrentgoTo().toString()));
+		flow.setState(State.valueOf(dto.getState()));
+		flow.setCurrentgoTo(Goto.valueOf(dto.getCurrentgoTo()));
 		if(dto.getGoTo() != null) {
-			flow.setGoTo(Enum.valueOf(Goto.class, dto.getGoTo().toString()));
+			flow.setGoTo(Goto.valueOf(dto.getGoTo()));
 		} 
-		flow.setAction(Enum.valueOf(Action.class, dto.getAction().toString()));		
+		flow.setAction(Action.valueOf(dto.getAction()));		
 		
 		return flow;
 	}

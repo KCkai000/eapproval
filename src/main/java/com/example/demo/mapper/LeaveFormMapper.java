@@ -7,7 +7,11 @@ import org.springframework.stereotype.Component;
 
 import com.example.demo.model.dto.FlowLogDto;
 import com.example.demo.model.dto.LeaveFormDto;
+import com.example.demo.model.entity.Flow;
 import com.example.demo.model.entity.LeaveForm;
+
+import jakarta.transaction.Transactional;
+
 
 
 @Component
@@ -18,11 +22,12 @@ public class LeaveFormMapper {
 		this.flowLogMapper = flowLogMapper;
 	}
 	
+	@Transactional
 	public LeaveFormDto toDto(LeaveForm form) {
 		LeaveFormDto dto = new LeaveFormDto();
 		dto.setId(form.getId());
-		dto.setFlowState(form.getState().getState().name());
-		dto.setAction(form.getAction().getAction().name());
+		dto.setFlowState(form.getCurrentFlow().getState().getDisplayName()); // 假設 State 有 getDisplayName 方法
+		dto.setAction(form.getCurrentFlow().getAction().getDisplayName()); // 假設 Action 有 getDisplayName 方法
 		dto.setStartDate(form.getStartDate());
 		dto.setEndDate(form.getEndDate());
 		dto.setReason(form.getReason());
@@ -33,21 +38,24 @@ public class LeaveFormMapper {
 		return dto;
 	}
 	
-//	public LeaveForm toEntity(LeaveFormDto dto) {
-//        LeaveForm entity = new LeaveForm();
-//        entity.setId(dto.getId());
-//
-//        // 將 String 轉為 Enum（State 和 Action）
-//        entity.setState(State.valueOf(dto.getFlowState())); // 假設 DTO 中為 "SICK_LEAVE" 這種 enum name
-//        entity.setAction(Action.valueOf(dto.getAction()));
-//
-//        // 日期格式
-//        entity.setStartDate(LocalDate.parse(dto.getStartDate()));
-//        entity.setEndDate(LocalDate.parse(dto.getEndDate()));
-//
-//        entity.setReason(dto.getReason());
-//
-//        // 注意：flowLogs 通常不從這裡塞入，因為會透過流程控制創建
-//        return entity;
-//    }
+	public LeaveForm toEntity(LeaveFormDto dto) {
+        LeaveForm form = new LeaveForm();   
+
+        // 日期格式
+        form.setStartDate(dto.getStartDate());
+        form.setEndDate((dto.getEndDate()));
+        form.setReason(dto.getReason());
+        form.setActive(true);
+        // 注意：flowLogs 通常不從這裡塞入，因為會透過流程控制創建
+        return form;
+    }
+	public LeaveForm toEntity(LeaveFormDto dto, Flow flow) {
+        LeaveForm form = new LeaveForm();
+        form.setCurrentFlow(flow);     
+        form.setStartDate(dto.getStartDate());
+        form.setEndDate(dto.getEndDate());
+        form.setReason(dto.getReason());
+        form.setActive(true);
+        return form;
+    }
 }

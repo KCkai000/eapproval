@@ -15,12 +15,13 @@ public class UserAddTest {
 	
 	@Test
 	public void Test() {
-		userService.addUser("Emily", "Emily@gmail.com", "w250617", "98765", true, 2);
+		
+		userService.addUser("Debby", "debby@gmail.com", "w250613", "98765", true, 1);
 		System.out.println("使用者建立成功d(^w^)b");
-//		userService.addUser("Debby", "debby@gmail.com", "w250614", "98765", true, 1);
-//		System.out.println("使用者建立成功d(^w^)b");
-//		userService.addUser("Zev", "Zev@gmail.com", "w250615", "98765", true, 3);
-//		System.out.println("使用者建立成功d(^w^)b");
+		userService.addUser("Emily", "Emily@gmail.com", "w250614", "98765", true, 2);
+		System.out.println("使用者建立成功d(^w^)b");
+		userService.addUser("Zev", "Zev@gmail.com", "w250615", "98765", true, 3);
+		System.out.println("使用者建立成功d(^w^)b");
 	}
 	
 

@@ -25,4 +25,5 @@ public class LeaveFormDto {
 	private LocalDate endDate; // 結束日期
 	private String reason; // 請假原因
 	private List<FlowLogDto> flowLogs; // 流程紀錄，這裡可以根據實際需要調整類型或結構
+	private Integer currentFlowId; // 當前流程ID，這裡假設是整數類型
 }

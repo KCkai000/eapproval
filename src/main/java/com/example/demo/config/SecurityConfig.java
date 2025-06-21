@@ -39,8 +39,8 @@ public class SecurityConfig {
         	.authorizeHttpRequests(auth -> auth
 				.requestMatchers("/System/login").permitAll() // 允許登入和 OPTIONS 請求
 				.requestMatchers(HttpMethod.OPTIONS,"/**").permitAll() // 允許登入和 OPTIONS 請求
-				.requestMatchers("/leave/create","/leave/my-forms").hasAnyRole("Staff", "Manager", "Human Resources") // 允許請假
-				.requestMatchers("/review/**").hasAnyRole("Manager", "Human Resources") // 允許審核請求	
+				.requestMatchers("/leave/create","/leave/my-forms").hasAnyRole("staff", "manager", "HR", "admin") // 允許請假
+				.requestMatchers("/leave/review/**").hasAnyRole("manager", "HR", "admin") // 允許審核請求	
 				.anyRequest().authenticated() // 其他請求需要認證
 			);
         

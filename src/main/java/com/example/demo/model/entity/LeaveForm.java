@@ -3,10 +3,14 @@ package com.example.demo.model.entity;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.example.demo.enums.Action;
+import com.example.demo.enums.State;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -32,15 +36,13 @@ public class LeaveForm {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
-	private Integer id; // 請假單ID
-	@ManyToOne
-	@JoinColumn(name = "status", nullable = false)
-	@JsonIgnore
-	private Flow state ; // 假別
-	@ManyToOne
-	@JoinColumn(name = "flow_action")
-	@JsonIgnore
-	private Flow action; // 審核狀態
+	private Integer id; // 請假單ID	
+	@Column(name = "status", nullable = false)
+	@Enumerated(EnumType.STRING)
+	private State state ; // 假別	
+	@Column(name = "flow_action")
+	@Enumerated(EnumType.STRING)
+	private Action action; // 審核狀態
 	@Column(name = "start_date", nullable = false)
 	private LocalDate startDate;
 	@Column(name = "end_date", nullable = false)
@@ -52,5 +54,7 @@ public class LeaveForm {
 	@OneToMany(mappedBy = "leaveForm", fetch = FetchType.LAZY)	
 	@JsonIgnore
 	private List<FlowLog> flowLogs; // 一個請假單可以有多個流程紀錄
-	
+	@ManyToOne
+	@JoinColumn(name = "current_flow_id")
+	private Flow currentFlow; // 與flow表關聯，表示當前流程狀態
 }

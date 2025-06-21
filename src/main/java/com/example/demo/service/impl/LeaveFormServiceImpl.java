@@ -1,170 +1,192 @@
 package com.example.demo.service.impl;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.enums.Action;
 import com.example.demo.enums.Goto;
 import com.example.demo.enums.State;
+import com.example.demo.exception.FlowException;
 import com.example.demo.exception.LeaveFormException;
 import com.example.demo.exception.UserException;
 import com.example.demo.mapper.LeaveFormMapper;
 import com.example.demo.model.dto.LeaveFormDto;
 import com.example.demo.model.entity.Flow;
-import com.example.demo.model.entity.FlowLog;
 import com.example.demo.model.entity.LeaveForm;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.FlowLogRepository;
-import com.example.demo.repository.FlowRepository;
 import com.example.demo.repository.LeaveFormRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.FlowLogService;
+import com.example.demo.service.FlowService;
 import com.example.demo.service.LeaveFormService;
-import com.example.demo.util.EnumUtil;
+import com.example.demo.service.UserService;
+import com.example.demo.util.AuthUtil;
+
 
 @Service
 public class LeaveFormServiceImpl  implements LeaveFormService{
 	
 	@Autowired
-	private LeaveFormRepository leaveFormRepository;	
+	private LeaveFormRepository	 leaveFormRepository;
 	@Autowired
-	private FlowRepository flowRepository;	
-	@Autowired	
 	private FlowLogRepository flowLogRepository;
 	@Autowired
-	private UserRepository userRepository;
+	private UserService userService;
+	@Autowired
+	private FlowService flowService;
+	@Autowired
+	private FlowLogService flowLogService;
 	@Autowired
 	private LeaveFormMapper leaveFormMapper;
 	@Autowired
-	private EnumUtil enumUtil;
+	private UserRepository userRepository;
 	
-	@Transactional
+	
 	@Override
+	@Transactional
 	public LeaveForm createLeaveForm(LeaveFormDto dto) {
-		// 1.  將輸入轉enum
-		State stateEnum = State.fromDisplayName(dto.getFlowState());
-		Action actionEnum = Action.fromDisplayName(dto.getAction());
-		if (actionEnum == null) {
-		    actionEnum = Action.START; // fallback
+		// 取得當前使用者
+		User user = userService.getCurrentUser();
+		if (user == null) {
+			throw new UserException("User not found");
 		}
+		//取得當前假別
+		State state = State.valueOf(dto.getFlowState());		
 		
-		// 2.查詢對應流程
-		Optional<Flow> flowOpt = flowRepository.findByStateAndAction(stateEnum, actionEnum);
-		if(flowOpt.isEmpty()) {
-			
-			throw new LeaveFormException("找不到對應的流程" + stateEnum + " 和 " + actionEnum);
-		}
-		Flow flow = flowOpt.get();
-		// 3.建立假單
-		LeaveForm leaveForm = new LeaveForm();
-		leaveForm.setState(flow);
-		leaveForm.setAction(flow);
-		leaveForm.setStartDate(dto.getStartDate());
-		leaveForm.setEndDate(dto.getEndDate());
-		leaveForm.setReason(dto.getReason());
+		//設定起始流程 = START
+		Action action = Action.START;
 		
-		//儲存假單
-		LeaveForm savedForm = leaveFormRepository.save(leaveForm); //儲存假單
-		leaveFormRepository.flush();
+		// 找到初始流程
+		Flow initialFlow = flowService.findInitialFlow(state, action, user.getRole().getId());
+
 		
-		//建立第一筆flowLog (紀錄請假單創建的流程)
-		User currentUser = getCurrentUser(); // 假設從 dto 中獲取當前用戶
+		//建立請假單
+		LeaveForm form = leaveFormMapper.toEntity(dto);
+		form.setState(state);
+		form.setCurrentFlow(initialFlow);		
+		LeaveForm saved = leaveFormRepository.save(form);
 		
-		FlowLog firstLog = new FlowLog();
-		firstLog.setLeaveForm(savedForm);
-	    firstLog.setFlow(flow); // 初始動作流程
-	    System.out.println("第一筆流程紀錄的狀態: " + flow.getState());
-	    firstLog.setUser(currentUser);
-	    flowLogRepository.save(firstLog);
-	    flowLogRepository.flush();
-	    
-	    // 拿到下一個節點(goto)
-	    String nextStep = flow.getGoTo() != null ? flow.getGoTo().name() : null;
-	    System.out.println(nextStep);
-	    
-	    // 將字串轉成 Goto enum
-	    Goto nextStepEnum = flow.getGoTo();
-	    System.out.println(nextStepEnum);
-	    
-	    // 決定下一個流程是哪個action
-	    Action nextActiionEnum = flow.getAction() != null ? Action.SUBMITTED: flow.getAction();
-	    System.out.println(nextActiionEnum);
-	    // 根據nextStepEnum和nextActionEnum 再去找對應的 Flow
-	    Flow nextFlow = flowRepository
-	    		.findByStateAndActionAndCurrentgoTo(stateEnum, nextActiionEnum, nextStepEnum)	    	
-	    		.filter(f -> f.getAction() == Action.SUBMITTED )
-	    		.orElseThrow(() -> new LeaveFormException("找不到下一個流程 " + nextStepEnum + " 和 " + nextActiionEnum));
-	    
-	    // 將下一階段流程寫入 flowLog
-	    FlowLog nextLog = new FlowLog();
-	    nextLog.setLeaveForm(savedForm); // 確保 leaveForm 已經有 ID
-	    nextLog.setFlow(nextFlow);
-	    nextLog.setUser(currentUser);
-	    flowLogRepository.save(nextLog);
-	    System.out.println("下一個流程紀錄: " + nextLog);
-	    flowLogRepository.flush();
-	    
-	    return savedForm;
+		//建立流程紀錄
+		flowLogService.createFlowLog(saved, initialFlow, user);
 		
+		//取得下一個流程
+		Goto next = initialFlow.getGoTo();
+		Flow submittedFlow = flowService.findNextFlowWithRole(next, state, Action.SUBMITTED, user.getRole().getId()); //找到下個流程action為submitted
+		
+		//更新假單為下個流程
+		saved.setCurrentFlow(submittedFlow);
+		leaveFormRepository.save(saved);
+		
+		//建立第二筆流程紀錄(SUBMITTED)
+		flowLogService.createFlowLog(form, submittedFlow, user);
+		
+		return saved;
 	}
 
 	@Override
-	@Transactional(readOnly = true)	
+	@Transactional
+	public List<LeaveForm> getAllLeaveForms() {
+		return leaveFormRepository.findAll();
+	}
+
+	@Override
+	@Transactional(readOnly =true)
 	public List<LeaveFormDto> findLeaveFormDtos(Integer userId) {
 		List<LeaveForm> forms = flowLogRepository.findLeaveFormByUserId(userId);
-		System.out.println("查詢到的假單數量：" + forms.size());
 		return forms.stream()
 				.map(leaveFormMapper::toDto)
 				.collect(Collectors.toList());
 	}
 
 	@Override
-	public List<LeaveForm> getAllLeaveForms() {		
-		return leaveFormRepository.findAll();
+	@Transactional
+	public LeaveForm updateLeaveForm(LeaveFormDto dto) {
+		LeaveForm form = leaveFormRepository.findById(dto.getId())
+				.orElseThrow(() -> new LeaveFormException("Leave form not found with id: " + dto.getId()));
+		form.setStartDate(dto.getStartDate());
+		form.setEndDate(dto.getEndDate());
+		form.setReason(dto.getReason());
+		return leaveFormRepository.save(form);
 	}
 
 	@Override
-	public LeaveForm updateLeaveForm(LeaveForm updateForm) {
-		LeaveForm existingForm = leaveFormRepository.findById(updateForm.getId())
-			.orElseThrow(() -> new LeaveFormException("假單不存在"));
-		
-		existingForm.setState(updateForm.getState());
-		existingForm.setAction(updateForm.getAction());
-		existingForm.setStartDate(updateForm.getStartDate());
-		existingForm.setEndDate(updateForm.getEndDate());
-		existingForm.setReason(updateForm.getReason());
-		return leaveFormRepository.save(existingForm);
-	}
-
-	@Override
+	@Transactional
 	public void deactivateLeaveForm(Integer id) {
 		LeaveForm form = leaveFormRepository.findById(id)
-			.orElseThrow(() -> new LeaveFormException("假單不存在"));
-		form.setActive(false); // 將 active 設為 false 以軟刪除
-		leaveFormRepository.save(form);		
-	}
-	
-	//獲取當前使用者
-	private User getCurrentUser() {
-	    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-	    String username = authentication.getName();
-	    return userRepository.findByAccount(username)
-	        .orElseThrow(() -> new UserException("找不到目前登入的使用者"));
-	}
-	
-	//創立流程紀錄 (flowLog)
-	private void createFlowLog(LeaveForm form, Flow flow, User user) {
-		FlowLog log = new FlowLog();
-		log.setLeaveForm(form);
-		log.setFlow(flow);
-		log.setUser(user);
-		flowLogRepository.save(log);
+				.orElseThrow(() -> new LeaveFormException("無法找到假單ID: " + id));
+		form.setActive(false);
+		leaveFormRepository.save(form);
 	}
 
+	@Override
+	@Transactional
+	public void processLeaveForm(Integer formId, Action action) {
+		
+		// 取得表單以及當前流程
+		LeaveForm form = leaveFormRepository.findWithFlowLogsById(formId)
+				.orElseThrow(() -> new LeaveFormException("無法找到請假單: " + formId));
+		User usernow = userService.getCurrentUser();
+		Flow currentFlow = form.getCurrentFlow();
+		Goto nextGoto = currentFlow.getGoTo();
+		State state = currentFlow.getState();
+		
+		// 根據目前節點、 假別、與假單的狀態， 尋找下一個流程
+		Flow nextFlow;
+		try {
+				
+			nextFlow = flowService.findNextFlowWithRole(nextGoto, state, action, usernow.getRole().getId());
+			System.out.println("處理流程跳轉 ➜ 使用者角色：" + usernow.getRole().getName());
+		}catch(Exception e) {
+			throw new FlowException("無法找到下個流程，請重新確認參數" + e.getMessage());
+		}
+			
+		// ✅ 防呆：流程終點（找不到下一步）
+		 if (nextFlow == null) {
+		    // 你可以選擇設定 currentFlow = null 或直接 return
+		    // form.setCurrentFlow(null); // 若你系統能處理 null
+		    System.out.println("流程已結束，無下一階段流程");
+		    return;
+		 }
+		// 更新假單狀態	
+		form.setCurrentFlow(nextFlow);;
+		leaveFormRepository.save(form);
+		
+		//建立流程紀錄
+		User user= userService.getCurrentUser();
+		flowLogService.createFlowLog(form, nextFlow, user);
+	}
+
+	@Override
+	public List<LeaveFormDto> findPenadingFormsForReview() {
+		//取得當前使用者角色
+		String roleName = AuthUtil.getCurrentRole();
+		
+		// 根據角色決定對應的審核動作
+		Goto goTo = switch(roleName) {
+		case "manager" -> Goto.REVIEW_MANAGER;
+		case "HR" -> Goto.REVIEW_HR;
+		case "admin" -> null;
+		default -> null;
+		};
+		
+		if(goTo == null) {
+			throw new FlowException("找不到對應審核動作，請檢察角色權限設定");
+		}
+		
+		// 呼叫 repository 查詢對應流程的假單(根據角色及動作)
+		List<LeaveForm> forms = leaveFormRepository.findPendingByGoToAndAction(goTo, Action.SUBMITTED);
+		
+		//轉乘 DTO 回傳
+		return forms.stream()
+				.map(leaveFormMapper::toDto)
+				.collect(Collectors.toList());
+	}
+
+	
+	
 }

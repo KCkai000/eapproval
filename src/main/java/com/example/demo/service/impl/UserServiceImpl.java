@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -135,6 +137,11 @@ public class UserServiceImpl implements UserService{
 		userRepository.deleteById(id);
 	}
 
-		
+	public User getCurrentUser() {
+	    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	    String username = authentication.getName();
+	    return userRepository.findByAccount(username)
+	        .orElseThrow(() -> new UserException("找不到目前登入的使用者"));
+	}
 
 }

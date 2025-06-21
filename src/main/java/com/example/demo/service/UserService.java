@@ -14,7 +14,7 @@ import com.example.demo.model.entity.User;
 @Service
 public interface UserService {
 	
-	
+	User getCurrentUser();
 	List<User> searchUsers(String keyword);
 	List<User> findAllUsers();
 	User findByAccount(String account);	
@@ -25,6 +25,6 @@ public interface UserService {
 	public void updateActive(Integer id,  Boolean active) throws UserException;			
 	public void updateRole(Integer id, String role) throws UserException;
 	public void deleteUser(Integer id) throws UserException;
-		
+	
 		
 }

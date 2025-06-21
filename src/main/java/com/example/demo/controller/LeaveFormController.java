@@ -1,7 +1,10 @@
 package com.example.demo.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.exception.LeaveFormException;
 import com.example.demo.model.dto.LeaveFormDto;
+import com.example.demo.model.dto.ReviewDto;
 import com.example.demo.model.entity.LeaveForm;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.UserRepository;
@@ -55,9 +59,9 @@ public class LeaveFormController {
 		}
 		
 		@PutMapping("/update")
-		public ResponseEntity<?> updateLeaveForm(@RequestBody LeaveForm leaveForm) {
+		public ResponseEntity<?> updateLeaveForm(@RequestBody LeaveFormDto dto) {
 		    try {
-		        LeaveForm updated = leaveFormService.updateLeaveForm(leaveForm);
+		        LeaveForm updated = leaveFormService.updateLeaveForm(dto);
 		        return ResponseEntity.ok(updated);
 		    } catch (LeaveFormException e) {
 		        return ResponseEntity.badRequest().body(e.getMessage());
@@ -73,6 +77,18 @@ public class LeaveFormController {
 			}catch (LeaveFormException e) {
 				return ResponseEntity.badRequest().body(e.getMessage());
 			}
+		}
+		
+		@GetMapping("/review/pending")
+		@Transactional
+		public ResponseEntity<List<LeaveFormDto>> findPendingForms(){
+			return ResponseEntity.ok(leaveFormService.findPenadingFormsForReview());
+		}
+		
+		@PostMapping("/review")
+		public ResponseEntity<String> review(@RequestBody ReviewDto dto){
+			leaveFormService.processLeaveForm(dto.getFormId(), dto.getAction());
+			return ResponseEntity.ok("已成功審核");
 		}
 		
 		@Autowired
