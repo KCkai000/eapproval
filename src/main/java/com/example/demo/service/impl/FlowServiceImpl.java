@@ -18,12 +18,14 @@ public class FlowServiceImpl implements FlowService{
 	
 	@Autowired
 	private FlowRepository flowRepository;
-		
+	
+	// 給審核用的流程查詢
 	@Override
-	public Flow findNextFlow(Goto currentgoTo, State state, Action action) {
+	public Flow findNextFlowByGoTo(Goto previousGoTo, State state, Action action) {
 		// 用 currentgoTo 和 state 找所有可能的流程
-		List<Flow> flows = flowRepository.findByCurrentGoToAndState(currentgoTo, state);
+		List<Flow> flows = flowRepository.findByCurrentGoToAndState(previousGoTo, state);
 		if (flows == null || flows.isEmpty()) {
+			System.out.println("找不到任何下一步流程（currentGoTo=" + previousGoTo + ", state=" + state + ")");
 			return null; // 没有找到符合条件的流程
 		}
 		return flows.stream()
@@ -40,14 +42,31 @@ public class FlowServiceImpl implements FlowService{
 
 	@Override
 	public Flow findNextFlowWithRole(Goto currentgoTo, State state, Action action, Integer roleId) {
-		System.out.println("🔍 查詢流程條件：");
-	    System.out.println("  - goTo: " + currentgoTo);
-	    System.out.println("  - state: " + state);
-	    System.out.println("  - action: " + action);
-	    System.out.println("  - roleId: " + roleId);
-		
-		return flowRepository.findByCurrentgoToAndStateAndActionAndRole_Id(currentgoTo, state, action, roleId)
-				.orElseThrow(()-> new FlowException("找不到符合條件的下個流程"));
+		return flowRepository.findAll().stream()
+			.filter(f -> f.getCurrentgoTo() == currentgoTo)
+			.filter(f -> f.getState() == state)
+			.filter(f -> f.getAction() == action)
+			.filter(f -> f.getRole().equals(roleId))
+			.findFirst()
+			.orElse(null);
+//		System.out.println("🔍 查詢流程條件：");
+//	    System.out.println("  - goTo: " + currentgoTo);
+//	    System.out.println("  - state: " + state);
+//	    System.out.println("  - action: " + action);
+//	    System.out.println("  - roleId: " + roleId);
+//		
+//		return flowRepository.findByCurrentgoToAndStateAndActionAndRole_Id(currentgoTo, state, action, roleId)
+//				.orElseThrow(()-> new FlowException("找不到符合條件的下個流程"));
+	}
+	
+	// 給送單流程用的
+	@Override
+	public Flow findNextFlowByCurrent(Goto current, State state, Action action) {
+		List<Flow> flows = flowRepository.findByCurrentAndStateAndAction(current, state, action);
+		if(flows == null || flows.isEmpty()) {
+			throw new FlowException("找不到下一步流程（current=" + current + ", state=" + state + ", action=" + action + ")");
+		}
+		return flows.get(0);
 	}
 
 }

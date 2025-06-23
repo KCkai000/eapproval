@@ -16,6 +16,7 @@ import com.example.demo.exception.UserException;
 import com.example.demo.mapper.LeaveFormMapper;
 import com.example.demo.model.dto.LeaveFormDto;
 import com.example.demo.model.entity.Flow;
+import com.example.demo.model.entity.FlowLog;
 import com.example.demo.model.entity.LeaveForm;
 import com.example.demo.model.entity.User;
 import com.example.demo.repository.FlowLogRepository;
@@ -68,22 +69,33 @@ public class LeaveFormServiceImpl  implements LeaveFormService{
 		//建立請假單
 		LeaveForm form = leaveFormMapper.toEntity(dto);
 		form.setState(state);
-		form.setCurrentFlow(initialFlow);		
+		form.setCurrentFlow(initialFlow);
+		form.setAction(initialFlow.getAction());
 		LeaveForm saved = leaveFormRepository.save(form);
 		
 		//建立流程紀錄
 		flowLogService.createFlowLog(saved, initialFlow, user);
 		
 		//取得下一個流程
-		Goto next = initialFlow.getGoTo();
-		Flow submittedFlow = flowService.findNextFlowWithRole(next, state, Action.SUBMITTED, user.getRole().getId()); //找到下個流程action為submitted
+		Goto nextCurrent = initialFlow.getGoTo();
+		System.out.println("【流程跳轉】nextCurrentGoTo = " + nextCurrent + ", state = " + state + ", action = SUBMITTED");
+		Flow submittedFlow = flowService.findNextFlowByCurrent(nextCurrent, state, Action.SUBMITTED); //找到下個流程action為submitted
+		
+		// ✅ 如果查不到就拋出錯誤，防止後面 NPE
+		if(submittedFlow == null) {
+			throw new FlowException("找不到初始流程，，請檢查 flow 表是否有 currentgoTo=USER, State=\" + state + \", Action=SUBMITTED 的設定");
+		}
 		
 		//更新假單為下個流程
 		saved.setCurrentFlow(submittedFlow);
+		saved.setState(state);
+		saved.setAction(submittedFlow.getAction());
+		System.out.println("確認 action: " + saved.getAction());
+
 		leaveFormRepository.save(saved);
 		
 		//建立第二筆流程紀錄(SUBMITTED)
-		flowLogService.createFlowLog(form, submittedFlow, user);
+		flowLogService.createFlowLog(saved, submittedFlow, user);
 		
 		return saved;
 	}
@@ -125,40 +137,64 @@ public class LeaveFormServiceImpl  implements LeaveFormService{
 
 	@Override
 	@Transactional
-	public void processLeaveForm(Integer formId, Action action) {
+	public void processLeaveForm(Integer formId, Action userAction) {
 		
 		// 取得表單以及當前流程
 		LeaveForm form = leaveFormRepository.findWithFlowLogsById(formId)
 				.orElseThrow(() -> new LeaveFormException("無法找到請假單: " + formId));
+		// 查到當前使用者
 		User usernow = userService.getCurrentUser();
-		Flow currentFlow = form.getCurrentFlow();
-		Goto nextGoto = currentFlow.getGoTo();
-		State state = currentFlow.getState();
-		
-		// 根據目前節點、 假別、與假單的狀態， 尋找下一個流程
-		Flow nextFlow;
-		try {
-				
-			nextFlow = flowService.findNextFlowWithRole(nextGoto, state, action, usernow.getRole().getId());
-			System.out.println("處理流程跳轉 ➜ 使用者角色：" + usernow.getRole().getName());
-		}catch(Exception e) {
-			throw new FlowException("無法找到下個流程，請重新確認參數" + e.getMessage());
+		// 取得最新流程紀錄
+		FlowLog currentLog = flowLogService.findLatestSubmittedLog(formId);
+		if(currentLog == null) {
+			throw new FlowException("查無當前 submitted 流程紀錄");
 		}
-			
-		// ✅ 防呆：流程終點（找不到下一步）
-		 if (nextFlow == null) {
-		    // 你可以選擇設定 currentFlow = null 或直接 return
-		    // form.setCurrentFlow(null); // 若你系統能處理 null
-		    System.out.println("流程已結束，無下一階段流程");
-		    return;
-		 }
-		// 更新假單狀態	
-		form.setCurrentFlow(nextFlow);;
-		leaveFormRepository.save(form);
 		
-		//建立流程紀錄
-		User user= userService.getCurrentUser();
-		flowLogService.createFlowLog(form, nextFlow, user);
+		Flow currentFlow = currentLog.getFlow();
+		Goto currentGoto = currentFlow.getGoTo(); //當前流程的節點
+		State currentState = currentFlow.getState();
+		
+		Action nextAction = null;
+		
+		if(currentGoto == Goto.REVIEW_MANAGER) {
+			if(userAction == Action.APPROVED) {
+				nextAction = Action.PENDING;
+			}else if(userAction == Action.REJECTED) {
+				nextAction = Action.REJECTED;
+			}else{
+				throw new FlowException("REVIEW_MANAGER僅支援APPROVED和REJECTED操作");
+			}
+		}else if(currentGoto == Goto.REVIEW_HR) {
+			if(userAction == Action.APPROVED) {
+				nextAction = Action.APPROVED;
+			}else if(userAction == Action.REJECTED) {
+				nextAction = Action.REJECTED;
+			}else {
+				throw new FlowException("REVIEW_HR 僅支援 APPROVED 或 REJECTED 操作");
+			}
+		}else {
+			throw new FlowException("目前節點 [" + currentGoto + "] 無法處理遞移");
+		}
+		
+		// 根據目前節點、狀態、與使用者動作 查詢下個流程
+	    
+	    Flow nextFlow = flowService.findNextFlowByGoTo(currentGoto, currentState, nextAction);
+	    if(nextFlow == null) {
+	    	System.out.println("查無符合條件的下個節點");
+	    	throw new FlowException("❌ 無法找到下個流程，參數如下：" +
+	                "previousGoTo=" + currentGoto +
+	                ", state=" + currentState +
+	                ", action=" + nextAction);
+	    }
+	    
+	    // 更新假單目前流程狀態
+	    form.setCurrentFlow(nextFlow);
+	    form.setAction(userAction);
+	    leaveFormRepository.save(form);
+	    
+	    //新增流程紀錄
+	    flowLogService.createFlowLog(form, nextFlow, usernow);
+	    System.out.println("成功推進流程至：" + nextFlow.getGoTo());
 	}
 
 	@Override
@@ -167,25 +203,56 @@ public class LeaveFormServiceImpl  implements LeaveFormService{
 		String roleName = AuthUtil.getCurrentRole();
 		
 		// 根據角色決定對應的審核動作
-		Goto goTo = switch(roleName) {
-		case "manager" -> Goto.REVIEW_MANAGER;
-		case "HR" -> Goto.REVIEW_HR;
-		case "admin" -> null;
-		default -> null;
+		Goto goTo;
+		Action expectedAction;
+				
+				
+		switch(roleName.toLowerCase()) {
+			case "manager" -> {
+				goTo = Goto.REVIEW_MANAGER;
+				expectedAction = Action.PENDING;
+			}
+			case "hr" -> {
+				goTo = Goto.REVIEW_HR;
+				expectedAction = Action.APPROVED;
+			}
+			default -> {
+				throw new FlowException("無法辨識角色對應之審核流程");
+			}
 		};
 		
-		if(goTo == null) {
-			throw new FlowException("找不到對應審核動作，請檢察角色權限設定");
-		}
 		
 		// 呼叫 repository 查詢對應流程的假單(根據角色及動作)
-		List<LeaveForm> forms = leaveFormRepository.findPendingByGoToAndAction(goTo, Action.SUBMITTED);
+		List<LeaveForm> forms = leaveFormRepository.findPendingByGoToAndAction(goTo, expectedAction);
 		
 		//轉乘 DTO 回傳
 		return forms.stream()
 				.map(leaveFormMapper::toDto)
 				.collect(Collectors.toList());
 	}
+//	//表單送出才更新狀態
+//	@Override
+//	@Transactional
+//	public void submitForm(Integer formId) {
+//		User user = userService.getCurrentUser();
+//		LeaveForm form = leaveFormRepository.findWithFlowLogsById(formId)
+//				.orElseThrow(()-> new LeaveFormException("找不到假單"));
+//		
+//		Flow curreFlow = form.getCurrentFlow();
+//		Goto nextGoto = curreFlow.getGoTo();
+//		State state = curreFlow.getState();
+//		
+//		// 找 SUBMITTED 的下一個節點
+//		Flow submittedFlow = flowService.findNextFlowWithRole(nextGoto, state, Action.SUBMITTED, user.getRole().getId());
+//		
+//		//更新 currentFlow 與 action
+//		form.setCurrentFlow(submittedFlow);
+//		form.setAction(submittedFlow.getAction());
+//		leaveFormRepository.save(form);
+//		
+//		//更新 SUBMITTED 流程紀錄
+//		flowLogService.createFlowLog(form, submittedFlow, user);
+//	}
 
 	
 	

@@ -33,8 +33,8 @@ public interface LeaveFormRepository extends JpaRepository<LeaveForm, Integer>{
 	List<LeaveForm> findPendingFormsByRoleId(@Param("roleId") Integer roleId, @Param("actions") List<Action> actions);
 	@Query("SELECT f FROM LeaveForm f WHERE f.currentFlow.action IN :actions AND f.currentFlow.role.name = :roleName")
 	List<LeaveForm> findFormsByActionsAndRoleName(@Param("actions") List<Action> actions, @Param("roleName") String roleName);
-	@Query("SELECT f FROM LeaveForm f WHERE f.currentFlow.goTo = :goTo AND f.currentFlow.action = :action")
+	@Query("SELECT f FROM LeaveForm f WHERE f.currentFlow.currentgoTo = :goTo AND f.currentFlow.action = :action AND f.active = true")
 	List<LeaveForm >  findPendingByGoToAndAction(@Param("goTo") Goto goTo, @Param("action") Action action);
 
-
+//	List<LeaveForm> findPendingByGoTo();
 }

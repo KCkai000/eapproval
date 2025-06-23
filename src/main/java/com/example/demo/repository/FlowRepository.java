@@ -31,4 +31,10 @@ public interface FlowRepository extends JpaRepository<Flow, Integer>{
 	List<Flow> findByCurrentGoToAndState(@Param("currentGoTo") Goto currentGoTo, @Param("state") State state);
 	//@Query("SELECT f FROM Flow f WHERE f.current = :currentgoTo AND f.state = :state AND f.action = :action AND f.role.id = :roleId")
 	Optional<Flow> findByCurrentgoToAndStateAndActionAndRole_Id(@Param("current") Goto currentgoTo, @Param("state") State state, @Param("action") Action action, @Param("roleId") Integer roleId);
+	
+	@Query("SELECT f FROM Flow f WHERE f.currentgoTo = :currentgoTo AND f.state = :state AND f.action = :action")
+	List<Flow> findByCurrentAndStateAndAction(@Param("currentgoTo") Goto currentgoTo,
+	                                          @Param("state") State state,
+	                                          @Param("action") Action action);
+
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,6 +42,12 @@ public class LeaveFormController {
 			LeaveForm leaveForm = leaveFormService.createLeaveForm(dto);
 			return ResponseEntity.ok(leaveForm);
 		}
+		
+//		@PostMapping("/submit")
+//		public ResponseEntity<?> submitLeave(@RequestParam Integer id){
+//			leaveFormService.submitForm(id);
+//			return ResponseEntity.ok("假單已送出");
+//		}
 		
 		private User getCurrentUser() {
 		    String username = org.springframework.security.core.context.SecurityContextHolder
@@ -85,6 +92,7 @@ public class LeaveFormController {
 			return ResponseEntity.ok(leaveFormService.findPenadingFormsForReview());
 		}
 		
+		@PreAuthorize("hasAnyRole('manager', 'HR')")
 		@PostMapping("/review")
 		public ResponseEntity<String> review(@RequestBody ReviewDto dto){
 			leaveFormService.processLeaveForm(dto.getFormId(), dto.getAction());

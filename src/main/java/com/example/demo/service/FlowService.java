@@ -10,7 +10,10 @@ import com.example.demo.model.entity.Flow;
 @Service
 public interface FlowService {
 	
-	Flow findNextFlow(Goto currentgoTo, State state, Action action);
+	// 給審核流程用的
+	Flow findNextFlowByGoTo(Goto currentgoTo, State state, Action action);
 	Flow findInitialFlow(State state, Action action, Integer roleId);
-	Flow findNextFlowWithRole(Goto currentgoTo, State state, Action action, Integer roleId);
+	Flow findNextFlowWithRole(Goto goTo, State state, Action action, Integer roleId);
+	// 給送單流程用的
+	Flow findNextFlowByCurrent(Goto current, State state, Action action);
 }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.example.demo.enums.Action;
 import com.example.demo.model.entity.FlowLog;
 import com.example.demo.model.entity.LeaveForm;
 
@@ -21,4 +22,8 @@ public interface FlowLogRepository extends JpaRepository<FlowLog, Integer>{
 	@EntityGraph(attributePaths = "leaveForm.flowLogs")
 	@Query("SELECT f From FlowLog f WHERE f.user.id = :userId")
 	List<FlowLog> findByUserId(@Param("userId") Integer userId); // 根據使用者ID搜尋流程紀錄
+	@Query("SELECT f FROM FlowLog f WHERE f.leaveForm.id = :formId AND f.flow.action = 'SUBMITTED' ORDER BY f.createTime DESC")
+	List<FlowLog> findSubmittedFlowLog(@Param("formId") Integer formId);
+	@Query("SELECT f FROM FlowLog f WHERE f.leaveForm.id = :formId AND f.flow.action = :action ORDER BY f.createTime DESC")
+	List<FlowLog> findLatestLogByFormIdAndActionOrderByCreateTimeDesc(@Param("formId") Integer formId, @Param("action") Action action);
 }
