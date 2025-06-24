@@ -95,6 +95,7 @@ public class LeaveFormController {
 		@PreAuthorize("hasAnyRole('manager', 'HR')")
 		@PostMapping("/review")
 		public ResponseEntity<String> review(@RequestBody ReviewDto dto){
+			System.out.println("收到審核請求：" + dto);
 			leaveFormService.processLeaveForm(dto.getFormId(), dto.getAction());
 			return ResponseEntity.ok("已成功審核");
 		}

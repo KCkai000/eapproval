@@ -36,5 +36,11 @@ public interface FlowRepository extends JpaRepository<Flow, Integer>{
 	List<Flow> findByCurrentAndStateAndAction(@Param("currentgoTo") Goto currentgoTo,
 	                                          @Param("state") State state,
 	                                          @Param("action") Action action);
-
+	// 使用 當前節點、下個節點以及假別 篩選流程
+	@Query("SELECT f FROM Flow f WHERE f.currentgoTo = :currentgoTo AND f.goTo = :goTo AND f.state = :state")
+	Optional<Flow> findByTransition(@Param("currentgoTo") Goto currentgoTo, @Param("goTo") Goto goTo, @Param("state") State state);
+	
+	//用於審核流程中判斷是否為終點流程
+	@Query("SELECT f FROM Flow f WHERE f.currentgoTo =:currentgoTo AND f.goTo IS NULL AND f.state = :state AND f.action = :action")
+	Optional<Flow> findFinalStep(@Param("currentgoTo") Goto currentgoTo,  @Param("state") State state, @Param("action") Action action);
 }

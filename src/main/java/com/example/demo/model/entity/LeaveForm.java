@@ -51,6 +51,8 @@ public class LeaveForm {
 	private String reason; // 請假原因
 	@Column(name = "active", nullable = false) //作為表單是否存在在頁面 false =>軟刪除
 	private Boolean active = true; // 是否啟用，預設為true
+	@Column(name = "completed", nullable = true)
+	private Boolean completed;  //假單的結案狀態
 	@OneToMany(mappedBy = "leaveForm", fetch = FetchType.LAZY)	
 	@JsonIgnore
 	private List<FlowLog> flowLogs; // 一個請假單可以有多個流程紀錄

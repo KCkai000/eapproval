@@ -1,6 +1,7 @@
 package com.example.demo.service.impl;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -67,6 +68,11 @@ public class FlowServiceImpl implements FlowService{
 			throw new FlowException("找不到下一步流程（current=" + current + ", state=" + state + ", action=" + action + ")");
 		}
 		return flows.get(0);
+	}
+
+	@Override
+	public Optional<Flow> findFinalStep(Goto currentgoTo, State state, Action action) {
+		return flowRepository.findFinalStep(currentgoTo, state, action);
 	}
 
 }
