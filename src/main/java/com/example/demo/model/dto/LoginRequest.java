@@ -13,10 +13,11 @@ public class LoginRequest {
 	
 	
 	private String account; //帳號可以輸入信箱或帳號
+	private String email;
 	private String password; //密碼
 	
 	public String getAccountOrEmail() {
-		return account;
+		return account != null ? account : email;
 	}
 	
 	

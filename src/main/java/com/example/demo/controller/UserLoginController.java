@@ -55,9 +55,12 @@ public class UserLoginController {
 	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 	                .body(Map.of("error", e.getMessage()));
 	    } catch (Exception e) {
+	    	e.printStackTrace();
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(Map.of("error", "伺服器發生錯誤"));
 	    }
 	}
+	
+
 
 }
